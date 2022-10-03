@@ -1,0 +1,23 @@
+{
+  "name": "tinyApp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/t-smift/tinyApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/t-smift/tinyApp/issues"
+  },
+  "homepage": "https://github.com/t-smift/tinyApp#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}
