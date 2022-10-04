@@ -1,7 +1,8 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
-
+const morgan = require('morgan');
+morgan(':method :url :status :res[content-length] - :response-time ms')
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -45,6 +46,8 @@ app.post("/urls", (req, res) => {
   urlDatabase[newId] = req.body.longURL;
   res.redirect(`/urls/${newId}`); 
 });
+
+app.post()
 
 app.get("/u/:id", (req, res) => {
   let shortId = req.params.id
