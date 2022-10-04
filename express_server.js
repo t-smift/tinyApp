@@ -11,6 +11,16 @@ const urlDatabase = {
 
 app.use(express.urlencoded({ extended: true }));
 
+function generateRandomString(n) {
+  let randomString           = '';
+  let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for ( let i = 0; i < n; i++ ) {
+    randomString += characters.charAt(Math.floor(Math.random()*characters.length));
+ }
+ return randomString;
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -28,6 +38,11 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
+});
+
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/urls/:id", (req, res) => {
