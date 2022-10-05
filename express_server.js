@@ -24,32 +24,12 @@ function generateRandomString(n) {
  return randomString;
 }
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get("/urls", (req, res) => {
+app.get("/urls/new", (req, res) => {
   const templateVars = {
     username: req.cookies["username"], 
     urls: urlDatabase 
   };
-  res.render("urls_index", templateVars);
-});
-
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
-});
-
-app.get("/u/:id", (req, res) => {
-  let shortId = req.params.id
-  const longURL = urlDatabase[shortId];
-  res.redirect(longURL);
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -61,6 +41,46 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/u/:id", (req, res) => {
+  let shortId = req.params.id
+  const longURL = urlDatabase[shortId];
+  const templateVars = {
+    username: req.cookies["username"], 
+    urls: urlDatabase 
+  };
+  res.redirect(longURL, templateVars);
+});
+
+app.get("/urls", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"], 
+    urls: urlDatabase 
+  };
+  res.render("urls_index", templateVars);
+});
+
+app.get("/", (req, res) => {
+  res.send("Hello!");
+});
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+app.post("/urls/:id/update", (req, res) => {
+  let id = req.params.id
+  urlDatabase[id] = req.body.newURL;
+  res.redirect("/urls");
+});
+
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect("/urls") 
+})
+
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username)
   res.redirect("/urls");
@@ -71,23 +91,11 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/urls/:id/update", (req, res) => {
-  let id = req.params.id
-  urlDatabase[id] = req.body.newURL;
-  res.redirect("/urls");
-});
-
 app.post("/urls", (req, res) => {
   let newId = generateRandomString(6);
   urlDatabase[newId] = req.body.longURL;
   res.redirect(`/urls/${newId}`); 
 });
-
-app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect("/urls") 
-})
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
