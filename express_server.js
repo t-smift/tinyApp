@@ -11,8 +11,22 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const userDatabase = {
+  1: {
+    id: 1,
+    email: "tay@gmail.com",
+    password: "1234"
+  },
+  2: {
+    id: 2,
+    email: "fake@fake.com",
+    password: "pass"
+  }
+};
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
+app.use(morgan('dev'))
 
 function generateRandomString(n) {
   let randomString           = '';
@@ -58,6 +72,14 @@ app.get("/urls", (req, res) => {
   };
   res.render("urls_index", templateVars);
 });
+
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"], 
+    urls: urlDatabase 
+  };
+  res.render("registration", templateVars)
+})
 
 app.get("/", (req, res) => {
   res.send("Hello!");
