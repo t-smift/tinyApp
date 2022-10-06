@@ -19,14 +19,14 @@
       </div>
       </div>
       <div>
-        <% if(username) { %>
+        <% if(user) { %>
           <form method="POST" action="/logout" style="text-align:right;">
-          <td> Logged in as <%= username %>! <button class="btn.default" type="submit">Log Out</button></td></form>
+          <td> Logged in as <%= user.email %>! <button class="btn.default" type="submit">Log Out</button></td></form>
         <% } else{ %> 
-          <form method="POST" action="/login" style="text-align:right;">
-          <td><input name="username" placeholder="Username"> <button class="btn.default" type="submit">Sign In</button> </td></form> 
+          <a href="/login"> Sign In</a> 
+          <a href="/register"> Register</a>
        <% } %>
-        <!-- <td><button class="btn.default" type="submit">Sign In</button></td> -->
+        
     </div>
   </nav>
 </header>
