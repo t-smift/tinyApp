@@ -5,7 +5,9 @@ const morgan = require('morgan');
 morgan(':method :url :status :res[content-length] - :response-time ms')
 app.set("view engine", "ejs");
 const bcrypt = require("bcryptjs");
-var cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session')
+const helper = require('./helpers')
+
 
 const urlDatabase = {
   b2xVn2: {
@@ -32,43 +34,14 @@ const users = {
 };
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser())
+app.use(cookieSession({
+  name: 'session',
+  keys: ["monster"],
+}))
 app.use(morgan('dev'))
 
-function generateRandomString(n) {
-  let randomString           = '';
-  let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-  for ( let i = 0; i < n; i++ ) {
-    randomString += characters.charAt(Math.floor(Math.random()*characters.length));
- }
- return randomString;
-};
-const getUserByEmail = (email) => {
-  for (const userId in users) {
-    const userFromDb = users[userId];
-
-    if (userFromDb.email === email) {
-      return userFromDb;
-    }
-  }
-
-  return null;
-};
-const generateUId = () => {
-  return Math.random().toString(36).substring(2, 6);
-};
-const urlsForUser = (id) => {
-  let userURL = {}
-  for (const shortUrl in urlDatabase) {
-    if (urlDatabase[shortUrl].userId === id) {
-      userURL[shortUrl] = urlDatabase[shortUrl];
-    }
-  }
-  return userURL;
-}
 app.get("/register", (req, res) => {
-  userId = req.cookies["userId"];
+  userId = req.session["userId"];
   const templateVars = {
     user: users[userId], 
     urls: urlDatabase 
@@ -80,7 +53,7 @@ app.get("/register", (req, res) => {
 })
 
 app.get("/login", (req, res) => {
-  userId = req.cookies["userId"];
+  userId = req.session["userId"];
   const templateVars = {
     user: users[userId], 
     urls: urlDatabase 
@@ -92,10 +65,10 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  userId = req.cookies["userId"];
+  userId = req.session["userId"];
   const templateVars = {
     user: users[userId], 
-    urls: urlsForUser(userId) 
+    urls: helper.urlsForUser(userId, urlDatabase) 
   };
   if (!userId) {
     res.redirect("/login");
@@ -104,7 +77,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  userId = req.cookies["userId"]
+  userId = req.session["userId"]
   let shortId = req.params.id
   const templateVars = {
     user: users[userId], 
@@ -114,7 +87,7 @@ app.get("/urls/:id", (req, res) => {
   if (!userId) {
     res.redirect("/login");
   }
-  let userUrls = urlsForUser(userId)
+  let userUrls = helper.urlsForUser(userId, urlDatabase)
   for (let url in userUrls) {
     if (url === shortId) {
       res.render("urls_show", templateVars);
@@ -126,10 +99,10 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   let shortId = req.params.id
   const longURL = urlDatabase[shortId].longURL;
-  userId = req.cookies["userId"];
+  userId = req.session["userId"];
   const templateVars = {
     user: users[userId], 
-    urls: urlsForUser(userId) 
+    urls: helper.urlsForUser(userId, urlDatabase) 
   };
   if (!urlDatabase[shortId]) {
     return res.send("That ID is not in the short URL database")
@@ -138,10 +111,10 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  userId = req.cookies["userId"];
+  userId = req.session["userId"];
   const templateVars = {
     user: users[userId], 
-    urls: urlsForUser(userId) 
+    urls: helper.urlsForUser(userId, urlDatabase) 
   };
   if (!userId) {
     res.send("Must log in before you can view your URLs");
@@ -169,12 +142,12 @@ app.post('/register', (req, res) => {
     return res.status(400).send('please include email AND password');
   }
 
-  const userFromDb = getUserByEmail(email);
+  const userFromDb = helper.getUserByEmail(email);
   if (userFromDb) {
     return res.status(400).send('email is already in use');
   }
 
-  const id = generateUId();
+  const id = helper.generateUId();
   const user = {
     id,
     email,
@@ -182,7 +155,7 @@ app.post('/register', (req, res) => {
   };
 
   users[id] = user;
-  res.cookie('userId', user.id);
+  req.session.userId = user.id;
   res.redirect('/urls');
   console.log(users)
 });
@@ -193,14 +166,14 @@ app.post("/login", (req, res) => {
   if (!email || !password) {
     return res.status(403).send('please include email AND password');
   }
-  const user = getUserByEmail(email);
+  const user = helper.getUserByEmail(email, users);
   if (!user) {
     return res.status(403).send('No user with that email found');
   }
   if(!bcrypt.compareSync(password, user.hashedPassword)) {
     return res.status(403).send("Ah ah ah, you didn't type the magic word");
   }
-  res.cookie('userId', user.id);
+  req.session.userId = user.id;
   res.redirect("/urls");
 });
 
@@ -219,16 +192,16 @@ app.post("/urls/:id/delete", (req, res) => {
 
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("userId")
+  req.session = null
   res.redirect("/login");
 });
 
 app.post("/urls", (req, res) => {
-  userId = req.cookies["userId"];
+  userId = req.session["userId"];
   if (!userId) {
     return res.send("Cannot shorten URLs unless you are signed in")
   }
-  let newId = generateRandomString(6);
+  let newId = helper.generateRandomString(6);
   urlDatabase[newId] = {
     longURL: req.body.longURL,
     userId: userId
