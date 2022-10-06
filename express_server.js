@@ -42,7 +42,6 @@ const getUserByEmail = (email) => {
     const userFromDb = users[userId];
 
     if (userFromDb.email === email) {
-      // we found our user!!
       return userFromDb;
     }
   }
@@ -124,34 +123,24 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  // check if email or password are NOT defined
   if (!email || !password) {
     return res.status(400).send('please include email AND password');
   }
 
-  // check if the email is already in use
   const userFromDb = getUserByEmail(email);
-
-  // if email is duplicated, respond with error message
   if (userFromDb) {
     return res.status(400).send('email is already in use');
   }
 
-  // create a new user object
   const id = generateUId();
-
   const user = {
     id,
     email,
     password
   };
 
-  // update the users object with our new user
   users[id] = user;
-
-  // do we log the user (set a cookie) OR do we redirect the user to /login
   res.cookie('userId', user.id);
-
   res.redirect('/urls');
 });
 
