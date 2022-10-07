@@ -1,11 +1,8 @@
 # tinyApp
 
-<<<<<<< feature/user-registration
-Welcome to the one true main branch, please disregard the branch name. 
-
 #### Intro
 
-These files contain the code necessary to create a fully functioning URL shorterning app, that will only work for you, on your own computer, and won't remember anything you've done once you close it. Neat! 
+These files contain the code necessary to create a fully functioning URL shorterning app, that will only work for you, on your own computer, and won't remember anything you've done once you close it. But it works!
 
 To get this app up and running, clone the repo and run 'NPM Install'. I'm under the impression this will install all the dependencies in the JSON package. 
 
