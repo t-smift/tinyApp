@@ -42,4 +42,9 @@ Then run 'npm start', and the express module will do the rest. This app is curre
   - It contains a link to submit a new URL, see your stored URLs and codes, as well as displays your logged-in status on the right. 
   - If you are signed in, it will display your email and a logout button. If not, it displays a link to the login and registration pages. 
   
-## A Test Folder with a Test File for the helper functions. 
+# Finished Product
+!["Screenshot of URLs page"](https://github.com/t-smift/tinyApp/blob/main/docs/Screen%20Shot%202022-10-06%20at%206.51.36%20PM.png?raw=true)
+
+!["Screenshot of register page"](https://github.com/t-smift/tinyApp/blob/main/docs/Screen%20Shot%202022-10-06%20at%206.52.05%20PM.png?raw=true)
+
+
