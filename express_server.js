@@ -17,8 +17,8 @@ app.use(morgan('dev'));
 
 const urlDatabase = {
   b2xVn2: {
-  longURL: "http://www.lighthouselabs.ca",
-  userId: "a",
+    longURL: "http://www.lighthouselabs.ca",
+    userId: "a",
   },
   '9sm5xK': {
     longURL: "http://www.google.com",
@@ -39,37 +39,35 @@ const users = {
   }
 };
 
-
-
 app.get("/register", (req, res) => {
   userId = req.session["userId"];
   const templateVars = {
-    user: users[userId], 
-    urls: urlDatabase 
+    user: users[userId],
+    urls: urlDatabase
   };
   if (!userId) {
-    return res.render("registration", templateVars)
+    return res.render("registration", templateVars);
   }
-  res.redirect("urls")
-})
+  res.redirect("urls");
+});
 
 app.get("/login", (req, res) => {
   userId = req.session["userId"];
   const templateVars = {
-    user: users[userId], 
-    urls: urlDatabase 
+    user: users[userId],
+    urls: urlDatabase
   };
   if (!userId) {
-    return res.render("login", templateVars)  
+    return res.render("login", templateVars);
   }
-  res.redirect("/urls")
+  res.redirect("/urls");
 });
 
 app.get("/urls/new", (req, res) => {
   userId = req.session["userId"];
   const templateVars = {
-    user: users[userId], 
-    urls: helper.urlsForUser(userId, urlDatabase) 
+    user: users[userId],
+    urls: helper.urlsForUser(userId, urlDatabase)
   };
   if (!userId) {
     res.redirect("/login");
@@ -82,25 +80,24 @@ app.get("/urls/:id", (req, res) => {
   if (!userId) {
     res.redirect("/login");
   }
-  const shortId = req.params.id
-  let userUrls = helper.urlsForUser(userId, urlDatabase)
+  const shortId = req.params.id;
+  let userUrls = helper.urlsForUser(userId, urlDatabase);
   if (!userUrls[shortId]) {
-    return res.send("That URL does not belong to you")
+    return res.send("That URL does not belong to you");
   }
   const templateVars = {
-    user: users[userId], 
-    id: req.params.id, 
-    longURL: userUrls[shortId].longURL 
+    user: users[userId],
+    id: req.params.id,
+    longURL: userUrls[shortId].longURL
   };
   res.render("urls_show", templateVars);
-  
 });
 
 app.get("/u/:id", (req, res) => {
-  let shortId = req.params.id
+  let shortId = req.params.id;
   const longURL = urlDatabase[shortId]["longURL"];
   if (!urlDatabase[shortId]) {
-    return res.send("That ID is not in the short URL database")
+    return res.send("That ID is not in the short URL database");
   }
   res.redirect(longURL);
 });
@@ -108,24 +105,13 @@ app.get("/u/:id", (req, res) => {
 app.get("/urls", (req, res) => {
   userId = req.session["userId"];
   const templateVars = {
-    user: users[userId], 
-    urls: helper.urlsForUser(userId, urlDatabase) 
+    user: users[userId],
+    urls: helper.urlsForUser(userId, urlDatabase)
   };
   if (!userId) {
     res.send("Must log in before you can view your URLs");
   }
   res.render("urls_index", templateVars);
-});
-
-
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.post('/register', (req, res) => {
@@ -164,7 +150,7 @@ app.post("/login", (req, res) => {
   if (!user) {
     return res.status(403).send('No user with that email found');
   }
-  if(!bcrypt.compareSync(password, user.hashedPassword)) {
+  if (!bcrypt.compareSync(password, user.hashedPassword)) {
     return res.status(403).send("Ah ah ah, you didn't type the magic word");
   }
   req.session.userId = user.id;
@@ -178,9 +164,9 @@ app.post("/urls/:id/update", (req, res) => {
   if (!userId) {
     return res.redirect("/login");
   }
-  let userUrls = helper.urlsForUser(userId, urlDatabase)
+  let userUrls = helper.urlsForUser(userId, urlDatabase);
   if (!userUrls[id]) {
-    return res.send("No such short URL exists")
+    return res.send("No such short URL exists");
   }
   urlDatabase[id].longURL = req.body.newURL;
   res.redirect("/urls");
@@ -191,32 +177,31 @@ app.post("/urls/:id/delete", (req, res) => {
   if (!userId) {
     return res.send("You do not have permission to delete this URL");
   }
-  let userUrls = helper.urlsForUser(userId, urlDatabase)
+  let userUrls = helper.urlsForUser(userId, urlDatabase);
   if (!userUrls[id]) {
-    return res.send("You cannot delete that which does not yet exist")
+    return res.send("You cannot delete that which does not yet exist");
   }
   delete urlDatabase[id];
-  res.redirect("/urls") 
-})
+  res.redirect("/urls");
+});
 
 
 app.post("/logout", (req, res) => {
-  req.session = null
-  res.redirect("/login");
+  req.session = null;
+  res.redirect("/urls");
 });
 
 app.post("/urls", (req, res) => {
   userId = req.session["userId"];
   if (!userId) {
-    return res.send("Cannot shorten URLs unless you are signed in")
+    return res.send("Cannot shorten URLs unless you are signed in");
   }
   let newId = helper.generateRandomString(6);
   urlDatabase[newId] = {
     longURL: req.body.longURL,
     userId: userId
-  }
-  console.log(urlDatabase)
-  res.redirect(`/urls/${newId}`); 
+  };
+  res.redirect(`/urls/${newId}`);
 });
 
 app.listen(PORT, () => {
