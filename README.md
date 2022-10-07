@@ -12,7 +12,7 @@ Then run 'npm start', and the express module will do the rest. This app is curre
 
 
 
-#The repo consists of:
+# The repo consists of:
 
 ## The express_server.js file.
 - This file contains all of the endpoints for the app. You can run this file from the Terminal with NPM start, and it will create a server running on Port 8080 by default. 
