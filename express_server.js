@@ -2,12 +2,18 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const morgan = require('morgan');
-morgan(':method :url :status :res[content-length] - :response-time ms')
+morgan(':method :url :status :res[content-length] - :response-time ms');
 app.set("view engine", "ejs");
 const bcrypt = require("bcryptjs");
-const cookieSession = require('cookie-session')
-const helper = require('./helpers')
+const cookieSession = require('cookie-session');
+const helper = require('./helpers');
 
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieSession({
+  name: 'session',
+  keys: ["monster"],
+}));
+app.use(morgan('dev'));
 
 const urlDatabase = {
   b2xVn2: {
@@ -33,12 +39,7 @@ const users = {
   }
 };
 
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieSession({
-  name: 'session',
-  keys: ["monster"],
-}))
-app.use(morgan('dev'))
+
 
 app.get("/register", (req, res) => {
   userId = req.session["userId"];
@@ -77,37 +78,31 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  userId = req.session["userId"]
-  let shortId = req.params.id
-  const templateVars = {
-    user: users[userId], 
-    id: req.params.id, 
-    longURL: urlDatabase[req.params.id].longURL 
-  };
+  userId = req.session["userId"];
   if (!userId) {
     res.redirect("/login");
   }
+  const shortId = req.params.id
   let userUrls = helper.urlsForUser(userId, urlDatabase)
-  for (let url in userUrls) {
-    if (url === shortId) {
-      res.render("urls_show", templateVars);
-    }
+  if (!userUrls[shortId]) {
+    return res.send("That URL does not belong to you")
   }
-  return res.send("That URL does not belong to you")
+  const templateVars = {
+    user: users[userId], 
+    id: req.params.id, 
+    longURL: userUrls[shortId].longURL 
+  };
+  res.render("urls_show", templateVars);
+  
 });
 
 app.get("/u/:id", (req, res) => {
   let shortId = req.params.id
-  const longURL = urlDatabase[shortId].longURL;
-  userId = req.session["userId"];
-  const templateVars = {
-    user: users[userId], 
-    urls: helper.urlsForUser(userId, urlDatabase) 
-  };
+  const longURL = urlDatabase[shortId]["longURL"];
   if (!urlDatabase[shortId]) {
     return res.send("That ID is not in the short URL database")
   }
-  res.redirect(longURL, templateVars);
+  res.redirect(longURL);
 });
 
 app.get("/urls", (req, res) => {
@@ -157,7 +152,6 @@ app.post('/register', (req, res) => {
   users[id] = user;
   req.session.userId = user.id;
   res.redirect('/urls');
-  console.log(users)
 });
 
 app.post("/login", (req, res) => {
@@ -179,13 +173,28 @@ app.post("/login", (req, res) => {
 
 
 app.post("/urls/:id/update", (req, res) => {
-  let id = req.params.id
+  let id = req.params.id;
+  userId = req.session["userId"];
+  if (!userId) {
+    return res.redirect("/login");
+  }
+  let userUrls = helper.urlsForUser(userId, urlDatabase)
+  if (!userUrls[id]) {
+    return res.send("No such short URL exists")
+  }
   urlDatabase[id].longURL = req.body.newURL;
   res.redirect("/urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
+  if (!userId) {
+    return res.send("You do not have permission to delete this URL");
+  }
+  let userUrls = helper.urlsForUser(userId, urlDatabase)
+  if (!userUrls[id]) {
+    return res.send("You cannot delete that which does not yet exist")
+  }
   delete urlDatabase[id];
   res.redirect("/urls") 
 })
