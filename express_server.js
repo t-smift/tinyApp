@@ -74,6 +74,7 @@ app.get("/urls/new", (req, res) => {
     user: users[userId],
     urls: helper.urlsForUser(userId, urlDatabase) //this function call only sends the urls attached to the signed in user as template vars
   };
+
   if (!userId) {
     res.redirect("/login");
   }
@@ -121,6 +122,8 @@ app.get("/urls", (req, res) => {
     user: users[userId],
     urls: helper.urlsForUser(userId, urlDatabase)
   };
+
+  //users who try to access the URLs page without loggin in will be redirected to login page
   if (!userId) {
     res.redirect("/login");
   }
@@ -136,6 +139,7 @@ app.get("/", (req, res) => {
   if (!userId) {
     res.redirect("/login");
   }
+  //home page that displays welcome message to new users, or redirects to login for non signed in users
   res.render("home", templateVars);
 });
 
@@ -144,27 +148,29 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
+//registration endpoint, hashes the submitted password and stores email
 
   if (!email || !password) {
     return res.status(400).send('please include email AND password');
   }
-
+//checks if both have been filled in before submission
   const userFromDb = helper.getUserByEmail(email);
   if (userFromDb) {
     return res.status(400).send('email is already in use');
   }
-
+//checks the submitted email against the database
   const id = helper.generateUId();
   const user = {
     id,
     email,
     hashedPassword
   };
-
+//if the submission passes, this function generates an unique ID and creates a new user Object to be stored
   users[id] = user;
   req.session.userId = user.id;
   res.redirect('/urls');
 });
+//finally the registered user is directed to the URLs page
 
 app.post("/login", (req, res) => {
   const email = req.body.email;
@@ -172,13 +178,19 @@ app.post("/login", (req, res) => {
   if (!email || !password) {
     return res.status(403).send('please include email AND password');
   }
+//checsks if both an email and password were enterred
+
   const user = helper.getUserByEmail(email, users);
   if (!user) {
     return res.status(403).send('No user with that email found');
   }
+  //checks submitted email against our database
+
   if (!bcrypt.compareSync(password, user.hashedPassword)) {
     return res.status(403).send("Ah ah ah, you didn't type the magic word");
   }
+  //compares hashed passwords
+
   req.session.userId = user.id;
   res.redirect("/urls");
 });
@@ -194,6 +206,7 @@ app.post("/urls/:id/update", (req, res) => {
   if (!userUrls[id]) {
     return res.send("No such short URL exists");
   }
+
   urlDatabase[id].longURL = req.body.newURL;
   res.redirect("/urls");
 });
@@ -213,7 +226,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 
 app.post("/logout", (req, res) => {
-  req.session = null;
+  req.session = null; //clears the secret cookies
   res.redirect("/urls");
 });
 
@@ -227,6 +240,7 @@ app.post("/urls", (req, res) => {
     longURL: req.body.longURL,
     userId: userId
   };
+///this redirect route inserts the newly generated shortID, and sends the user to that page
   res.redirect(`/urls/${newId}`);
 });
 
