@@ -15,6 +15,7 @@ app.use(cookieSession({
 }));
 app.use(morgan('dev'));
 
+//example URLs for the database, registered to example user id "a"
 const urlDatabase = {
   b2xVn2: {
     longURL: "http://www.lighthouselabs.ca",
@@ -26,6 +27,8 @@ const urlDatabase = {
   },
 };
 
+//example users, just used for testing, can delete
+//shows that each generated user needs an ID, and email and a password
 const users = {
   a: {
     id: "a",
@@ -39,18 +42,20 @@ const users = {
   }
 };
 
+//the get register request will render the registration page if a user is not logged in, or redirect to the urls page if they are. 
 app.get("/register", (req, res) => {
   userId = req.session["userId"];
   const templateVars = {
     user: users[userId],
     urls: urlDatabase
   };
-  if (!userId) {
+  if (!userId) { //checks for the userId cookie
     return res.render("registration", templateVars);
   }
   res.redirect("urls");
 });
 
+//once a user logs in the server will redirect them the the urls page, or render the login page if they try to access this without being logged in
 app.get("/login", (req, res) => {
   userId = req.session["userId"];
   const templateVars = {
@@ -67,7 +72,7 @@ app.get("/urls/new", (req, res) => {
   userId = req.session["userId"];
   const templateVars = {
     user: users[userId],
-    urls: helper.urlsForUser(userId, urlDatabase)
+    urls: helper.urlsForUser(userId, urlDatabase) //this function call only sends the urls attached to the signed in user as template vars
   };
   if (!userId) {
     res.redirect("/login");
@@ -77,14 +82,18 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   userId = req.session["userId"];
-  if (!userId) {
+  if (!userId) {        
     res.redirect("/login");
   }
+//checks if user is logged in or redirects to login page
+
   const shortId = req.params.id;
   let userUrls = helper.urlsForUser(userId, urlDatabase);
   if (!userUrls[shortId]) {
     return res.send("That URL does not belong to you");
   }
+// if they are loggin in, this checks if the shortUrl enterred in the browser is in this users database
+
   const templateVars = {
     user: users[userId],
     id: req.params.id,
@@ -92,6 +101,8 @@ app.get("/urls/:id", (req, res) => {
   };
   res.render("urls_show", templateVars);
 });
+// if they are logged in and the shortUrl belongs to them, we render the page for that URL. 
+
 
 app.get("/u/:id", (req, res) => {
   let shortId = req.params.id;
@@ -99,6 +110,8 @@ app.get("/u/:id", (req, res) => {
   if (!urlDatabase[shortId]) {
     return res.send("That ID is not in the short URL database");
   }
+  //this get request refers to the link that users receive to give out, so it does not check for sign-in or database. 
+  // it only checks if the ID exists at all, and if it does, redirects to the actual website
   res.redirect(longURL);
 });
 
@@ -109,10 +122,23 @@ app.get("/urls", (req, res) => {
     urls: helper.urlsForUser(userId, urlDatabase)
   };
   if (!userId) {
-    res.send("Must log in before you can view your URLs");
+    res.redirect("/login");
   }
   res.render("urls_index", templateVars);
 });
+
+app.get("/", (req, res) => {
+  userId = req.session["userId"];
+  const templateVars = {
+    user: users[userId],
+    urls: helper.urlsForUser(userId, urlDatabase)
+  };
+  if (!userId) {
+    res.redirect("/login");
+  }
+  res.render("home", templateVars);
+});
+
 
 app.post('/register', (req, res) => {
   const email = req.body.email;
